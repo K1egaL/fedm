@@ -99,13 +99,10 @@ tcp://host:443 # TCP connect
 
 ---
 
-## Установка
+### Установка
+**Требуется Python 3.14+.**
 
-Требуется **Python 3.14+**.
-
-<details>
-<summary><b>Arch Linux / CachyOS</b></summary>
-
+Arch Linux / CachyOS
 ```bash
 sudo pacman -S --needed python python-pyside6 python-dnspython \
     python-httpx python-aioquic python-icmplib
@@ -113,8 +110,10 @@ sudo pacman -S --needed python python-pyside6 python-dnspython \
 git clone https://github.com/K1egaL/fedm.git
 cd fedm
 python -m fedm
+``` 
 
-</details><details> <summary><b>Debian / Ubuntu / Mint / Pop!_OS</b></summary>
+Debian / Ubuntu / Mint / Pop!_OS
+```bash
 sudo apt install python3 python3-pip python3-venv git
 git clone https://github.com/K1egaL/fedm.git
 cd fedm
@@ -122,8 +121,11 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
 python -m fedm
+```
 
-</details><details> <summary><b>Fedora / RHEL / Nobara</b></summary>
+Fedora / RHEL / Nobara
+
+```bash
 sudo dnf install python3 python3-pip git
 git clone https://github.com/K1egaL/fedm.git
 cd fedm
@@ -131,8 +133,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
 python -m fedm
+```
 
-</details><details> <summary><b>openSUSE</b></summary>
+openSUSE
+```bash
 sudo zypper install python3 python3-pip git
 git clone https://github.com/K1egaL/fedm.git
 cd fedm
@@ -140,8 +144,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
 python -m fedm
-
-</details><details> <summary><b>macOS</b> (экспериментально)</summary>
+```
+macOS (экспериментально)
+```bash
 brew install python@3.14 git
 git clone https://github.com/K1egaL/fedm.git
 cd fedm
@@ -149,46 +154,47 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
 python -m fedm
-</details>
+```
+Команда fedm в PATH
+После pip install -e . внутри активированного venv команда fedm доступна откуда угодно.
 
+Иконка в меню приложений (Linux)
+Создай файл ~/.local/share/applications/fedm.desktop, подставив свои абсолютные пути:
 
-Установка команды fedm в PATH
-bash
-# внутри активированного venv
-pip install -e .
-Теперь команда fedm доступна откуда угодно.
-
-Установка иконки в меню приложений (Linux)
-bash
-mkdir -p ~/.local/share/applications
-cat > ~/.local/share/applications/fedm.desktop <<DESKTOP
+```ini
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=fedm
 GenericName=DNS Benchmarker
 Comment=Быстрый тест DNS-резолверов (plain, DoT, DoH, DoQ)
-Exec=$PWD/.venv/bin/python -m fedm
-Icon=$PWD/assets/icon.svg
+Exec=/home/USER/fedm/.venv/bin/python -m fedm
+Icon=/home/USER/fedm/assets/icon.svg
 Terminal=false
 Categories=Network;Utility;
 StartupWMClass=fedm
 Keywords=dns;benchmark;network;speed;fedm;
-DESKTOP
+```
+Обнови базу:
+
+```bash
 update-desktop-database ~/.local/share/applications/
+```
 Теперь fedm ищется через меню KDE/GNOME.
 
 ICMP без root
 icmplib требует разрешить unprivileged ping:
 
-bash
+```bash
 sysctl net.ipv4.ping_group_range
-Если вывод 0 0 — добавь:
+```
+Если вывод 0 0 — разреши:
 
-bash
+```bash
 echo 'net.ipv4.ping_group_range = 0 2147483647' | \
     sudo tee /etc/sysctl.d/99-ping.conf
 sudo sysctl --system
+```
 Использование
 Настройки → Провайдеры — выбери готовые резолверы.
 
@@ -206,23 +212,35 @@ Ctrl+S — экспорт JSON, Ctrl+Shift+S — CSV.
 
 Формат своих серверов
 text
-# комментарии начинаются с #
+
 1.1.1.1
 1.0.0.1
 tls://dns.quad9.net
 https://dns.google/dns-query
 quic://dns.adguard-dns.com
 tcp://1.1.1.1:443
-Под капотом
-Файл	Что внутри
-fedm/bench.py	Async-ядро. Все пробы (UDP/DoT/DoH/DoQ/ICMP/TCP), генерация случайных субдоменов, агрегация результатов.
-fedm/providers.py	Список провайдеров и дефолтных доменов — чистые данные.
-fedm/config.py	Чтение/запись ~/.config/fedm/config.json.
-fedm/ui.py	PySide6 GUI: модель таблицы, фильтр, ПКМ-меню, экспорт.
-fedm/__main__.py	Точка входа для python -m fedm.
-Ключевая деталь: _gather_with_timeout в bench.py гарантирует, что зависшая проба (например, DoQ к заблокированному серверу) не подвесит весь бенч. Она корректно превращается в TimeoutError и идёт в счётчик потерь, а остальные результаты возвращаются нормально.
 
-FAQ
+## Под капотом
+|Файл |	Что внутри |
+|---|---|
+| **fedm/bench.py**	| Async-ядро. Все пробы (UDP/DoT/DoH/DoQ/ICMP/TCP), генерация случайных субдоменов, агрегация результатов. |
+| **fedm/providers.py**	| Список провайдеров и дефолтных доменов — чистые данные. |
+| **fedm/config.py** | Чтение/запись ~/.config/fedm/config.json. |
+| **fedm/ui.py**	| PySide6 GUI: модель таблицы, фильтр, ПКМ-меню, экспорт. |
+| **fedm/__main__.py**	| Точка входа для python -m fedm. |
+| **Ключевая деталь:** | _gather_with_timeout в bench.py гарантирует, что зависшая проба (например, DoQ к заблокированному серверу) не подвесит весь бенч. Она корректно превращается в TimeoutError и идёт в счётчик потерь, а остальные результаты возвращаются нормально. |
+
+
+
+
+
+
+
+
+
+
+
+## FAQ
 <details> <summary><b>Почему у меня DoQ показывает 100% loss?</b></summary>
 Скорее всего, ваш провайдер, корпоративный firewall или VPN блокирует UDP:853. Это типично для РФ и многих хостеров.
 
@@ -267,8 +285,9 @@ text
 </details><details> <summary><b>Можно ли использовать fedm в скриптах?</b></summary>
 Пока нет CLI-режима, но он в roadmap. Пока — экспорт в JSON и парсинг:
 
-bash
+``` bash
 python -m fedm
+```
 # запустить тест, потом File → Export JSON
 jq '.results | sort_by(.median_ms) | .[0]' ~/fedm-results.json
 </details>
@@ -283,7 +302,6 @@ Roadmap
 □ DoH через общий httpx-пул — ускорение теста в 2 раза
 □ ECS (EDNS Client Subnet) — для продвинутых сценариев
 □ Проверка DNSSEC — валидация цепочки подписи
-□ Тёмная/светлая тема — автоопределение из системы (сейчас вручную)
 Хотите что-то добавить — откройте issue.
 
 Star History
@@ -304,4 +322,4 @@ icmplib — ICMP
 <div align="center">
 Сделано с ❤️ и <code>asyncio</code>
 
-</div> ``` ```
+</div>
