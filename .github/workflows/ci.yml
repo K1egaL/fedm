@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - name: Install system deps (Qt)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6 dnspython httpx aioquic icmplib
+
+      - name: Compile check
+        run: |
+          python -m compileall -q fedm/
+
+      - name: Import check (offscreen Qt)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python -c "import fedm.bench, fedm.config, fedm.providers, fedm.ui"
+          python -c "from fedm.ui import MainWindow; from PySide6.QtWidgets import QApplication; app = QApplication([]); w = MainWindow(); print('GUI ok')"
+
+      - name: Smoke test - build_targets
+        run: |
+          python -c "
+          from fedm import bench
+          t = bench.build_targets(['cloudflare', 'google'], [], False)
+          assert len(t) >= 10, f'expected >=10 targets, got {len(t)}'
+          print(f'built {len(t)} targets')
+          "
